@@ -1,4 +1,5 @@
 from typing import List, Optional
+from uuid import UUID
 import requests
 import strawberry
 from fastapi import FastAPI
@@ -7,9 +8,12 @@ import warnings
 from helper.helper import Cursor
 from api.achievements import (
     Achievement,
+    AchievementGroup,
     DailyAchievement,
     DailyAchievements,
+    get_achievement_groups,
     get_achievements,
+    get_all_achievement_group_ids,
     get_all_achievement_ids,
     get_daily_achievements,
 )
@@ -46,6 +50,14 @@ class Query:
             offset = cursor.offset
 
         return get_achievements(ids, offset, max)
+
+    @strawberry.field
+    def achievementGroupIds(self) -> List[UUID]:
+        return get_all_achievement_group_ids()
+
+    @strawberry.field
+    def achievementGroup(self) -> List[AchievementGroup]:
+        return get_achievement_groups()
 
     @strawberry.field
     def dailyAchievements(self, tomorrow: Optional[bool] = False) -> DailyAchievements:

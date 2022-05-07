@@ -1,5 +1,6 @@
 from enum import Enum
 from typing import List, Optional
+from uuid import UUID
 from requests import PreparedRequest
 import strawberry
 from api.general import Product
@@ -56,6 +57,14 @@ class Achievement:
     ]
     bits: Optional[List[AchievementTextBit | AchievementBitNotImplemented]]
     point_cap: Optional[int]
+
+
+@strawberry.type
+class AchievementGroup:
+    id: UUID
+    name: str
+    description: str
+    order: int
 
 
 @strawberry.type
@@ -131,6 +140,15 @@ def _marshal_daily_achievement(
         required_access=achievement["required_access"],
         requirement=_.requirement,
         tiers=_.tiers,
+    )
+
+
+def _marshal_achievement_group(group: dict):
+    return AchievementGroup(
+        id=UUID(group["id"]),
+        name=group["name"],
+        description=group["description"],
+        order=group["order"],
     )
 
 
@@ -215,3 +233,15 @@ def get_daily_achievements(tomorrow: bool = False) -> List[DailyAchievements]:
             for daily in daily_achievements["special"]
         ],
     )
+
+
+def get_all_achievement_group_ids() -> List[UUID]:
+    return [UUID(uuid) for uuid in request_api("achievements/groups")]
+
+
+def get_achievement_groups() -> List[AchievementGroup]:
+    group_ids = get_all_achievement_group_ids()
+    groups = request_api(
+        f"achievements/groups?ids={','.join([str(id).upper() for id  in group_ids])}"
+    )
+    return [_marshal_achievement_group(group) for group in groups]
